@@ -37,6 +37,20 @@ class TestAdd(unittest.TestCase):
         output = out.getvalue().strip()
         self.assertEqual(output, expected_output)
 
+    def test_player_wins(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 63, 0'
+        ]
+
+        expected_output = 'players: Giorgio\nGiorgio rolls 63, 0. Giorgio moves from Start to 63. Giorgio Wins!!'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+
  
 if __name__ == '__main__':
     unittest.main()
