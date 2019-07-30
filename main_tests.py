@@ -4,7 +4,6 @@ import unittest
 from unittest.mock import patch
 
 import main
-from main import add_player, print_players
  
 class TestAdd(unittest.TestCase):
 

@@ -10,7 +10,6 @@ GOOSES = [5, 9, 14, 18, 23, 27]
 def print_players(players):
     print('players:', ', '.join(players))
 
-
 def add_player(players, positions, not_won, result):
     if result.group(1) in players:
         print(result.group(1), ': already existing player')
@@ -28,15 +27,15 @@ def move_player(players, positions, not_won, result, rolling=False):
         old_position = positions[index]
         cube_one, cube_two, steps = build_movements(result, rolling)
         new_position = old_position + steps
-        move_player_to_position(index, positions, old_position + steps)
+        move_player_to_position(index, positions, new_position)
 
         msg_components = {
-            'name': players[index],
-            'cube_one': cube_one,
-            'cube_two': cube_two,
-            'old_position': 'Start' if old_position == 0 else old_position,
-            'new_position': positions[index],
-            'bridge_arrive': BRIDGE_ARRIVE
+          'name': players[index],
+          'cube_one': cube_one,
+          'cube_two': cube_two,
+          'old_position': 'Start' if old_position == 0 else old_position,
+          'new_position': positions[index],
+          'bridge_arrive': BRIDGE_ARRIVE
         }
 
         if positions[index] == WIN_POSITION:
@@ -88,7 +87,6 @@ FUNCTIONS = [
     move_player
 ]
 
-
 def main(commands_number=-1):
     escaper = True
     players = []
@@ -106,7 +104,7 @@ def main(commands_number=-1):
             if result:
                 FUNCTIONS[i](players, positions, not_won, result)
                 break
-            
+                   
             if i == len(REGEXES) - 1:
                 print('Invalid command!')
 
