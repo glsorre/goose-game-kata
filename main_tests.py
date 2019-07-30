@@ -1,33 +1,42 @@
-import main
+from io import StringIO
+
 import unittest
+from unittest.mock import patch
+
+import main
+from main import add_player, print_players
  
 class TestAdd(unittest.TestCase):
-    """
-    Test the add function from the mymath library
-    """
- 
-    def test_add_integers(self):
-        """
-        Test that the addition of two integers returns the correct total
-        """
-        result = mymath.add(1, 2)
-        self.assertEqual(result, 3)
- 
-    def test_add_floats(self):
-        """
-        Test that the addition of two floats returns the correct result
-        """
-        result = mymath.add(10.5, 2)
-        self.assertEqual(result, 12.5)
- 
-    def test_add_strings(self):
-        """
-        Test the addition of two strings returns the two string as one
-        concatenated string
-        """
-        result = mymath.add('abc', 'def')
-        self.assertEqual(result, 'abcdef')
- 
+
+    def test_add_player(self):
+        user_input = [
+            'add player Giorgio',
+            'add player Giorgio'
+        ]
+
+        expected_output = 'players: Giorgio\nGiorgio : already existing player'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main(1)
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+
+    def test_move_player(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 3, 4',
+            'move Giorgio 2, 2'
+        ]
+
+        expected_output = 'players: Giorgio\nGiorgio rolls 3, 4. Giorgio moves from Start to 7\nGiorgio rolls 2, 2. Giorgio moves from 7 to 11'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main(2)
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+
  
 if __name__ == '__main__':
     unittest.main()
