@@ -44,7 +44,7 @@ def move_player(players, positions, not_won, result, rolling=False):
         if positions[index] == WIN_POSITION:      
             match_ended(not_won, msg_components)
         elif positions[index] > WIN_POSITION:
-            bounce_player(index, positions, players, msg_components)
+            bounce_player(index, positions, msg_components)
         elif positions[index] == BRIDGE_START:
             move_player_to_position(index, positions, BRIDGE_ARRIVE, msg_components)
         elif positions[index] in GOOSES:
@@ -74,12 +74,12 @@ def move_player_to_position(index, positions, position, msg_components=None):
         print(MSGS['bridge'].format(**msg_components))
     positions[index] = position
 
-def bounce_player(index, positions, players, msg_components):
+def bounce_player(index, positions, msg_components):
     print(MSGS['bounce_start'].format(**msg_components), end='')
     bounce = positions[index] - WIN_POSITION
     new_position = WIN_POSITION - bounce
     move_player_to_position(index, positions, new_position)
-    print(MSGS['bounce_end'].format(players[index], new_position))
+    print(MSGS['bounce_end'].format(msg_components['name'], new_position))
 
 def move_player_gooses(index, positions, old_position, steps, players, msg_components=None):
     if msg_components:
