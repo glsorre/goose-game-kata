@@ -39,20 +39,22 @@ def move_player(players, positions, not_won, result, rolling=False):
           'win_position': WIN_POSITION
         }
 
-        if positions[index] == WIN_POSITION:
-            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}. {name} Wins!!'.format(**msg_components))
-            not_won[0] = False
+        print(MSGS['rolls'].format(**msg_components), end='')
+
+        if positions[index] == WIN_POSITION:      
+            match_ended(not_won, msg_components)
         elif positions[index] > WIN_POSITION:
-            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {win_position}. {name} bounces! '.format(**msg_components), end='')
-            bounce_player(index, positions, players)
+            bounce_player(index, positions, players, msg_components)
         elif positions[index] == BRIDGE_START:
-            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to The Bridge. {name} jumps to {bridge_arrive}'.format(**msg_components))
-            move_player_to_position(index, positions, BRIDGE_ARRIVE)
+            move_player_to_position(index, positions, BRIDGE_ARRIVE, msg_components)
         elif positions[index] in GOOSES:
-            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}, The Goose. '.format(**msg_components),  end='')
-            move_player_gooses(index, positions, new_position, steps, players)
+            move_player_gooses(index, positions, new_position, steps, players, msg_components)
         else:
-            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}'.format(**msg_components))
+            print(MSGS['move'].format(**msg_components))
+
+def match_ended(not_won, msg_components):
+    print(MSGS['win'].format(**msg_components))
+    not_won[0] = False
 
 def roll_dice(cube_faces):
     return random.randint(1, cube_faces)
@@ -67,23 +69,28 @@ def build_movements(result, rolling):
 def move_player_with_rolling(players, positions, not_won, result):
     move_player(players, positions, not_won, result, True)
 
-def move_player_to_position(index, positions, position):
+def move_player_to_position(index, positions, position, msg_components=None):
+    if msg_components:
+        print(MSGS['bridge'].format(**msg_components))
     positions[index] = position
 
-def bounce_player(index, positions, players):
+def bounce_player(index, positions, players, msg_components):
+    print(MSGS['bounce_start'].format(**msg_components), end='')
     bounce = positions[index] - WIN_POSITION
     new_position = WIN_POSITION - bounce
     move_player_to_position(index, positions, new_position)
-    print('{} returns to {}'.format(players[index], new_position))
+    print(MSGS['bounce_end'].format(players[index], new_position))
 
-def move_player_gooses(index, positions, old_position, steps, players):
+def move_player_gooses(index, positions, old_position, steps, players, msg_components=None):
+    if msg_components:
+        print(MSGS['goose_start'].format(**msg_components),  end='')
     new_position = old_position + steps
     if new_position in GOOSES:
-        print('{} moves again and goes to {}, The Goose. '.format(players[index], new_position), end='')
+        print(MSGS['goose_middle'].format(players[index], new_position), end='')
         move_player_gooses(index, positions, new_position, steps, players)
     else:
         move_player_to_position(index, positions, new_position)
-        print('{} moves again and goes to {}'.format(players[index], new_position))
+        print(MSGS['goose_end'].format(players[index], new_position))
 
 REGEXES = [
     r'^add player (.*)$',
@@ -96,6 +103,18 @@ FUNCTIONS = [
     move_player_with_rolling,
     move_player
 ]
+
+MSGS = {
+    'rolls':        '{name} rolls {cube_one}, {cube_two}. ' ,
+    'win':          '{name} moves from {old_position} to {new_position}. {name} Wins!!',
+    'bounce_start': '{name} moves from {old_position} to {win_position}. {name} bounces! ',
+    'bounce_end':   '{} returns to {}',
+    'bridge':       '{name} moves from {old_position} to The Bridge. {name} jumps to {bridge_arrive}',
+    'goose_start':  '{name} moves from {old_position} to {new_position}, The Goose. ',
+    'goose_middle': '{} moves again and goes to {}, The Goose. ',
+    'goose_end':    '{} moves again and goes to {}',
+    'move':         '{name} moves from {old_position} to {new_position}'
+}
 
 def main(commands_number=-1):
     escaper = True
