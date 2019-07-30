@@ -19,8 +19,6 @@ def add_player(players, positions, not_won, result):
         positions.append(0)
         print_players(players)
 
-
-
 def move_player(players, positions, not_won, result, rolling=False):
     try:
         index = players.index(result.group(1))
@@ -45,8 +43,8 @@ def move_player(players, positions, not_won, result, rolling=False):
             print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}. {name} Wins!!'.format(**msg_components))
             not_won[0] = False
         elif positions[index] == BRIDGE_START:
-            move_player_to_position(index, positions, BRIDGE_ARRIVE)
             print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to The Bridge. {name} jumps to {bridge_arrive}'.format(**msg_components))
+            move_player_to_position(index, positions, BRIDGE_ARRIVE)
         elif positions[index] in GOOSES:
             print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}, The Goose. '.format(**msg_components),  end='')
             move_player_gooses(index, positions, new_position, steps, players)
