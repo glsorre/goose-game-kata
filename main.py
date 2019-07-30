@@ -35,12 +35,16 @@ def move_player(players, positions, not_won, result, rolling=False):
           'cube_two': cube_two,
           'old_position': 'Start' if old_position == 0 else old_position,
           'new_position': positions[index],
-          'bridge_arrive': BRIDGE_ARRIVE
+          'bridge_arrive': BRIDGE_ARRIVE,
+          'win_position': WIN_POSITION
         }
 
         if positions[index] == WIN_POSITION:
             print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {new_position}. {name} Wins!!'.format(**msg_components))
             not_won[0] = False
+        elif positions[index] > WIN_POSITION:
+            print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to {win_position}. {name} bounces! '.format(**msg_components), end='')
+            bounce_player(index, positions, players)
         elif positions[index] == BRIDGE_START:
             print('{name} rolls {cube_one}, {cube_two}. {name} moves from {old_position} to The Bridge. {name} jumps to {bridge_arrive}'.format(**msg_components))
             move_player_to_position(index, positions, BRIDGE_ARRIVE)
@@ -65,6 +69,12 @@ def move_player_with_rolling(players, positions, not_won, result):
 
 def move_player_to_position(index, positions, position):
     positions[index] = position
+
+def bounce_player(index, positions, players):
+    bounce = positions[index] - WIN_POSITION
+    new_position = WIN_POSITION - bounce
+    move_player_to_position(index, positions, new_position)
+    print('{} returns to {}'.format(players[index], new_position))
 
 def move_player_gooses(index, positions, old_position, steps, players):
     new_position = old_position + steps

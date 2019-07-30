@@ -61,6 +61,23 @@ class TestAdd(unittest.TestCase):
         self.assertEqual(players, ['Giorgio'])
         self.assertEqual(positions, [63])
 
+    def test_player_bounces(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 60, 0',
+            'move Giorgio 3, 2'
+        ]
+
+        expected_output = 'players: Giorgio\nGiorgio rolls 60, 0. Giorgio moves from Start to 60\nGiorgio rolls 3, 2. Giorgio moves from 60 to 63. Giorgio bounces! Giorgio returns to 61'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            players, positions = main.main(2)
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+        self.assertEqual(players, ['Giorgio'])
+        self.assertEqual(positions, [61])
+
     def test_the_bridge(self):
         user_input = [
             'add player Giorgio',
