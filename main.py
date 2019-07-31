@@ -1,5 +1,6 @@
 import random
 import re
+import itertools
 
 CUBE_FACES = 6
 WIN_POSITION = 63
@@ -18,10 +19,19 @@ def add_player(players, positions, result):
         positions.append(0)
         print_players(players)
 
-def push_forward_player(name, index, positions, not_won, cube_one, cube_two, steps):
+def get_others_indexes(positions, index, new_position):
+    result = []
+    for i, position in enumerate(positions):
+        if position == new_position and i != index:
+            result.append(i)
+    return result
+
+def push_forward_player(name, index, positions, players, not_won, cube_one, cube_two, steps):
     old_position = positions[index]
     new_position = old_position + steps
     move_player_to_position(index, positions, new_position)
+
+    others_indexes = get_others_indexes(positions, index, new_position)
 
     msg_components = {
       'name': name,
@@ -34,13 +44,15 @@ def push_forward_player(name, index, positions, not_won, cube_one, cube_two, ste
     }
 
     print(MSGS['rolls'].format(**msg_components), end='')
-
-    if positions[index] == WIN_POSITION:
+    
+    if others_indexes:
+        move_players_prank(index, positions, players, old_position, new_position, msg_components, others_indexes)
+    elif positions[index] == WIN_POSITION:
         match_ended(not_won, msg_components)
     elif positions[index] > WIN_POSITION:
         bounce_player(index, positions, msg_components)
     elif positions[index] == BRIDGE_START:
-        move_player_to_position(index, positions, BRIDGE_ARRIVE, msg_components)
+        move_player_bridge(index, positions, BRIDGE_ARRIVE, msg_components)
     elif positions[index] in GOOSES:
         move_player_gooses(index, positions, new_position, steps, name, msg_components)
     else:
@@ -69,10 +81,13 @@ def move_player(players, positions, not_won, with_rolling, result):
     index = get_player_id(name, players)
     if index is not None:
         cube_one, cube_two, steps = build_movements(result, with_rolling)
-        push_forward_player(name, index, positions, not_won, cube_one, cube_two, steps)
+        push_forward_player(name, index, positions, players, not_won, cube_one, cube_two, steps)
 
-def move_player_to_position(index, positions, position, msg_components=None):
-    if msg_components: print(MSGS['bridge'].format(**msg_components))
+def move_player_to_position(index, positions, position):
+    positions[index] = position
+
+def move_player_bridge(index, positions, position, msg_components):
+    print(MSGS['bridge'].format(**msg_components))
     positions[index] = position
 
 def bounce_player(index, positions, msg_components):
@@ -91,7 +106,18 @@ def move_player_gooses(index, positions, old_position, steps, name, msg_componen
     else:
         print(MSGS['goose_end'].format(name, new_position))
         move_player_to_position(index, positions, new_position)
-        
+
+def move_players_prank(index, positions, players, old_position, new_position, msg_components, others_indexes):
+    print(MSGS['move'].format(**msg_components), end='')
+    move_player_to_position(index, positions, new_position)
+    for i, other_index in enumerate(others_indexes):
+        msg = MSGS['prank'].format(new_position, players[other_index], msg_components['old_position'])
+        if i == len(others_indexes) - 1:
+            print(msg)
+        else:
+            print(msg, end='')
+        move_player_to_position(other_index, positions, old_position) 
+    
 REGEXES = [
     r'^add player (.*)$',
     r'^move (\w*)$',
@@ -113,7 +139,8 @@ MSGS = {
     'goose_start':  '{name} moves from {old_position} to {new_position}, The Goose. ',
     'goose_middle': '{} moves again and goes to {}, The Goose. ',
     'goose_end':    '{} moves again and goes to {}',
-    'move':         '{name} moves from {old_position} to {new_position}'
+    'move':         '{name} moves from {old_position} to {new_position}',
+    'prank':        '. On {} there is {}, who returns to {}'
 }
 
 def initialize(initialization):
@@ -131,7 +158,7 @@ def main(commands_number=-1, initialization=None):
     not_won = [True]
     players, positions = initialize(initialization)
 
-    FUNCTIONS_ARGS = [
+    function_args = [
       [players, positions],
       [players, positions, not_won, True],
       [players, positions, not_won, False]
@@ -145,7 +172,7 @@ def main(commands_number=-1, initialization=None):
         for i, regex in enumerate(REGEXES):
             result = re.match(regex, cmd)
             if result:
-                FUNCTIONS[i](*FUNCTIONS_ARGS[i], result)
+                FUNCTIONS[i](*function_args[i], result)
                 break
 
             if i == len(REGEXES) - 1: print('Invalid command!')
