@@ -173,12 +173,12 @@ class TestAdd(unittest.TestCase):
             'add player Giorgio',
             'add player Franco',
             'add player Luca',
-            'move Giorgio 5, 1',
-            'move Franco 5, 1',
-            'move Luca 12, 0'
+            'move Giorgio 3, 2',
+            'move Franco 3, 2',
+            'move Luca 10, 0'
         ]
 
-        expected_output = 'players: Giorgio\nplayers: Giorgio, Franco\nplayers: Giorgio, Franco, Luca\nGiorgio rolls 5, 1. Giorgio moves from Start to The Bridge. Giorgio jumps to 12\nFranco rolls 5, 1. Franco moves from Start to The Bridge. Franco jumps to 12\nLuca rolls 12, 0. Luca moves from Start to 12. On 12 there is Giorgio, who returns to Start. On 12 there is Franco, who returns to Start'
+        expected_output = 'players: Giorgio\nplayers: Giorgio, Franco\nplayers: Giorgio, Franco, Luca\nGiorgio rolls 3, 2. Giorgio moves from Start to 5, The Goose. Giorgio moves again and goes to 10\nFranco rolls 3, 2. Franco moves from Start to 5, The Goose. Franco moves again and goes to 10. On 10 there is Giorgio, who returns to Start\nLuca rolls 10, 0. Luca moves from Start to 10. On 10 there is Franco, who returns to Start'
 
         with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
             players, positions = main.main(5)
@@ -186,7 +186,7 @@ class TestAdd(unittest.TestCase):
         output = out.getvalue().strip()
         self.assertEqual(output, expected_output)
         self.assertEqual(players, ['Giorgio', 'Franco', 'Luca'])
-        self.assertEqual(positions, [0, 0, 12])
+        self.assertEqual(positions, [0, 0, 10])
 
     def test_full_match(self):
         with patch('builtins.input', return_value='move Giorgio'):
