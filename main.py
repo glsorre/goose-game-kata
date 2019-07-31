@@ -36,23 +36,27 @@ def push_forward_player(name, index, positions, players, not_won, cube_one, cube
       'cube_one': cube_one,
       'cube_two': cube_two,
       'old_position': 'Start' if old_position == 0 else old_position,
-      'new_position': positions[index],
+      'new_position': new_position,
       'bridge_arrive': BRIDGE_ARRIVE,
       'win_position': WIN_POSITION
     }
+    
+    if new_position > WIN_POSITION:
+        msg_components['new_position'] = WIN_POSITION
+    elif new_position == BRIDGE_START:
+        msg_components['new_position'] = 'The Bridge'
 
     print(MSGS['rolls'].format(**msg_components), end='')
+    print(MSGS['move'].format(**msg_components), end='')
 
-    if positions[index] == WIN_POSITION:
+    if new_position == WIN_POSITION:
         match_ended(not_won, msg_components)
-    elif positions[index] > WIN_POSITION:
+    elif new_position > WIN_POSITION:
         bounce_player(index, positions, msg_components)
-    elif positions[index] == BRIDGE_START:
+    elif new_position == BRIDGE_START:
         new_position = move_player_bridge(index, positions, BRIDGE_ARRIVE, msg_components)
-    elif positions[index] in GOOSES:
+    elif new_position in GOOSES:
         new_position = move_player_gooses(index, positions, new_position, steps, name, msg_components)
-    else:
-        print(MSGS['move'].format(**msg_components), end='')
 
     others_indexes = get_others_indexes(positions, index, new_position)
 
@@ -135,11 +139,11 @@ FUNCTIONS = [
 
 MSGS = {
     'rolls':        '{name} rolls {cube_one}, {cube_two}. ',
-    'win':          '{name} moves from {old_position} to {new_position}. {name} Wins!!',
-    'bounce_start': '{name} moves from {old_position} to {win_position}. {name} bounces! ',
+    'win':          '. {name} Wins!!',
+    'bounce_start': '. {name} bounces! ',
     'bounce_end':   '{} returns to {}',
-    'bridge':       '{name} moves from {old_position} to The Bridge. {name} jumps to {bridge_arrive}',
-    'goose_start':  '{name} moves from {old_position} to {new_position}, The Goose. ',
+    'bridge':       '. {name} jumps to {bridge_arrive}',
+    'goose_start':  ', The Goose. ',
     'goose_middle': '{} moves again and goes to {}, The Goose. ',
     'goose_end':    '{} moves again and goes to {}',
     'move':         '{name} moves from {old_position} to {new_position}',
