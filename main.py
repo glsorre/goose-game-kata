@@ -10,7 +10,7 @@ GOOSES = [5, 9, 14, 18, 23, 27]
 def print_players(players):
     print('players:', ', '.join(players))
 
-def add_player(players, positions, not_won, result):
+def add_player(players, positions, result):
     if result.group(1) in players:
         print(result.group(1), ': already existing player')
     else:
@@ -18,7 +18,7 @@ def add_player(players, positions, not_won, result):
         positions.append(0)
         print_players(players)
 
-def move_player_basic(name, index, positions, not_won, cube_one, cube_two, steps):
+def push_forward_player(name, index, positions, not_won, cube_one, cube_two, steps):
     old_position = positions[index]
     new_position = old_position + steps
     move_player_to_position(index, positions, new_position)
@@ -67,19 +67,12 @@ def build_movements(result, rolling):
 
     return cube_one, cube_two, steps
 
-def move_player(players, positions, not_won, result):
+def move_player(players, positions, not_won, with_rolling, result):
     name = result.group(1)
     index = get_player_id(name, players)
     if index is not None:
-        cube_one, cube_two, steps = build_movements(result, False)
-        move_player_basic(name, index, positions, not_won, cube_one, cube_two, steps)
-
-def move_player_with_rolling(players, positions, not_won, result):
-    name = result.group(1)
-    index = get_player_id(name, players)
-    if index is not None:
-        cube_one, cube_two, steps = build_movements(result, True)
-        move_player_basic(name, index, positions, not_won, cube_one, cube_two, steps)
+        cube_one, cube_two, steps = build_movements(result, with_rolling)
+        push_forward_player(name, index, positions, not_won, cube_one, cube_two, steps)
 
 def move_player_to_position(index, positions, position, msg_components=None):
     if msg_components:
@@ -112,7 +105,7 @@ REGEXES = [
 
 FUNCTIONS = [
     add_player,
-    move_player_with_rolling,
+    move_player,
     move_player
 ]
 
@@ -128,11 +121,26 @@ MSGS = {
     'move':         '{name} moves from {old_position} to {new_position}'
 }
 
-def main(commands_number=-1):
-    escaper = True
+def initialize(initialization):
     players = []
     positions = []
+
+    if initialization:
+        players = initialization
+        positions = [0 for x in initialization]
+
+    return players, positions
+
+def main(commands_number=-1, initialization=[]):
+    escaper = True
     not_won = [True]
+    players, positions = initialize(initialization)
+
+    FUNCTIONS_ARGS = [
+      [players, positions],
+      [players, positions, not_won, True],
+      [players, positions, not_won, False]
+    ]
 
     while not_won[0] and escaper:
         if commands_number == 0:
@@ -143,7 +151,7 @@ def main(commands_number=-1):
         for i, regex in enumerate(REGEXES):
             result = re.match(regex, cmd)
             if result:
-                FUNCTIONS[i](players, positions, not_won, result)
+                FUNCTIONS[i](*FUNCTIONS_ARGS[i], result)
                 break
 
             if i == len(REGEXES) - 1:
@@ -153,7 +161,6 @@ def main(commands_number=-1):
             commands_number -= 1
 
     return players, positions
-
 
 if __name__ == '__main__':
     main()

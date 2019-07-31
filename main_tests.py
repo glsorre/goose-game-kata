@@ -45,6 +45,20 @@ class TestAdd(unittest.TestCase):
         self.assertEqual(players, ['Giorgio', 'Franco'])
         self.assertEqual(positions, [11, 11])
 
+    def test_move_player_with_rolling(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio'
+        ]
+
+        expected_output = r'players: Giorgio\nGiorgio rolls \d+\, \d+\. Giorgio moves from Start to .*'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            players, positions = main.main(1)
+
+        output = out.getvalue().strip()
+        self.assertRegex(output, expected_output)
+
     def test_player_wins(self):
         user_input = [
             'add player Giorgio',
@@ -127,6 +141,13 @@ class TestAdd(unittest.TestCase):
         self.assertEqual(output, expected_output)
         self.assertEqual(players, ['Giorgio'])
         self.assertEqual(positions, [22])
+
+    def test_full_match(self):
+        with patch('builtins.input', return_value='move Giorgio'):
+            players, positions = main.main(-1, ['Giorgio'])
+
+        self.assertEqual(players, ['Giorgio'])
+        self.assertEqual(positions, [63])
  
 if __name__ == '__main__':
     unittest.main()
