@@ -47,10 +47,8 @@ def push_forward_player(name, index, positions, not_won, cube_one, cube_two, ste
         print(MSGS['move'].format(**msg_components))
 
 def get_player_id(name, players):
-    try:
-        index = players.index(name)
-    except ValueError:
-        print('The player', name, 'does not exist.')
+    try: index = players.index(name)
+    except ValueError: print('The player', name, 'does not exist.')
     return index
 
 def match_ended(not_won, msg_components):
@@ -64,7 +62,6 @@ def build_movements(result, rolling):
     cube_one = roll_dice(CUBE_FACES) if rolling else result.group(2)
     cube_two = roll_dice(CUBE_FACES) if rolling else result.group(3)
     steps = int(cube_one) + int(cube_two)
-
     return cube_one, cube_two, steps
 
 def move_player(players, positions, not_won, with_rolling, result):
@@ -75,8 +72,7 @@ def move_player(players, positions, not_won, with_rolling, result):
         push_forward_player(name, index, positions, not_won, cube_one, cube_two, steps)
 
 def move_player_to_position(index, positions, position, msg_components=None):
-    if msg_components:
-        print(MSGS['bridge'].format(**msg_components))
+    if msg_components: print(MSGS['bridge'].format(**msg_components))
     positions[index] = position
 
 def bounce_player(index, positions, msg_components):
@@ -87,16 +83,15 @@ def bounce_player(index, positions, msg_components):
     print(MSGS['bounce_end'].format(msg_components['name'], new_position))
 
 def move_player_gooses(index, positions, old_position, steps, name, msg_components=None):
-    if msg_components:
-        print(MSGS['goose_start'].format(**msg_components), end='')
+    if msg_components: print(MSGS['goose_start'].format(**msg_components), end='')
     new_position = old_position + steps
     if new_position in GOOSES:
         print(MSGS['goose_middle'].format(name, new_position), end='')
         move_player_gooses(index, positions, new_position, steps, name)
     else:
-        move_player_to_position(index, positions, new_position)
         print(MSGS['goose_end'].format(name, new_position))
-
+        move_player_to_position(index, positions, new_position)
+        
 REGEXES = [
     r'^add player (.*)$',
     r'^move (\w*)$',
@@ -125,13 +120,13 @@ def initialize(initialization):
     players = []
     positions = []
 
-    if initialization:
+    if initialization is not None:
         players = initialization
         positions = [0 for x in initialization]
 
     return players, positions
 
-def main(commands_number=-1, initialization=[]):
+def main(commands_number=-1, initialization=None):
     escaper = True
     not_won = [True]
     players, positions = initialize(initialization)
@@ -143,8 +138,7 @@ def main(commands_number=-1, initialization=[]):
     ]
 
     while not_won[0] and escaper:
-        if commands_number == 0:
-            escaper = False
+        if commands_number == 0: escaper = False
 
         cmd = input('Insert your command: ')
 
@@ -154,11 +148,9 @@ def main(commands_number=-1, initialization=[]):
                 FUNCTIONS[i](*FUNCTIONS_ARGS[i], result)
                 break
 
-            if i == len(REGEXES) - 1:
-                print('Invalid command!')
+            if i == len(REGEXES) - 1: print('Invalid command!')
 
-        if commands_number != -1:
-            commands_number -= 1
+        if commands_number != -1: commands_number -= 1
 
     return players, positions
 
