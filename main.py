@@ -1,6 +1,5 @@
 import random
 import re
-import itertools
 
 CUBE_FACES = 6
 WIN_POSITION = 63
@@ -26,11 +25,13 @@ def get_others_indexes(positions, index, new_position):
             result.append(i)
     return result
 
-def push_forward_player(name, index, positions, players, not_won, cube_one, cube_two, steps):
+def move_player_basic(name, index, positions, players, steps):
     old_position = positions[index]
     new_position = old_position + steps
     move_player_to_position(index, positions, new_position)
+    return old_position, new_position
 
+def build_msg_components(name, cube_one, cube_two, old_position, new_position):
     msg_components = {
       'name': name,
       'cube_one': cube_one,
@@ -45,25 +46,8 @@ def push_forward_player(name, index, positions, players, not_won, cube_one, cube
         msg_components['new_position'] = WIN_POSITION
     elif new_position == BRIDGE_START:
         msg_components['new_position'] = 'The Bridge'
-
-    print(MSGS['rolls'].format(**msg_components), end='')
-    print(MSGS['move'].format(**msg_components), end='')
-
-    if new_position == WIN_POSITION:
-        match_ended(not_won, msg_components)
-    elif new_position > WIN_POSITION:
-        bounce_player(index, positions, msg_components)
-    elif new_position == BRIDGE_START:
-        new_position = move_player_bridge(index, positions, BRIDGE_ARRIVE, msg_components)
-    elif new_position in GOOSES:
-        new_position = move_player_gooses(index, positions, new_position, steps, name, msg_components)
-
-    others_indexes = get_others_indexes(positions, index, new_position)
-
-    if others_indexes:
-        move_players_prank(index, positions, players, old_position, new_position, msg_components, others_indexes)
-
-    print('')
+    
+    return msg_components
 
 def get_player_id(name, players):
     try: index = players.index(name)
@@ -88,7 +72,28 @@ def move_player(players, positions, not_won, with_rolling, result):
     index = get_player_id(name, players)
     if index is not None:
         cube_one, cube_two, steps = build_movements(result, with_rolling)
-        push_forward_player(name, index, positions, players, not_won, cube_one, cube_two, steps)
+        old_position, new_position = move_player_basic(name, index, positions, players, steps)
+        msg_components = build_msg_components(name, cube_one, cube_two, old_position, new_position)
+
+        print(MSGS['rolls'].format(**msg_components), end='')
+        print(MSGS['move'].format(**msg_components), end='')
+
+        if new_position == WIN_POSITION:
+            match_ended(not_won, msg_components)
+        elif new_position > WIN_POSITION:
+            new_position = bounce_player(index, positions, msg_components)
+        elif new_position == BRIDGE_START:
+            new_position = move_player_bridge(index, positions, BRIDGE_ARRIVE, msg_components)
+        elif new_position in GOOSES:
+            print(MSGS['goose_start'].format(**msg_components), end='')
+            new_position = move_player_gooses(index, positions, new_position, steps, msg_components)
+
+        others_indexes = get_others_indexes(positions, index, new_position)
+
+        if others_indexes:
+            move_players_prank(positions, players, old_position, new_position, msg_components, others_indexes)
+
+        print('')
 
 def move_player_to_position(index, positions, position):
     positions[index] = position
@@ -104,19 +109,19 @@ def bounce_player(index, positions, msg_components):
     new_position = WIN_POSITION - bounce
     move_player_to_position(index, positions, new_position)
     print(MSGS['bounce_end'].format(msg_components['name'], new_position), end='')
+    return new_position
 
-def move_player_gooses(index, positions, old_position, steps, name, msg_components=None):
-    if msg_components: print(MSGS['goose_start'].format(**msg_components), end='')
+def move_player_gooses(index, positions, old_position, steps, msg_components):
     new_position = old_position + steps
     if new_position in GOOSES:
-        print(MSGS['goose_middle'].format(name, new_position), end='')
-        move_player_gooses(index, positions, new_position, steps, name)
+        print(MSGS['goose_middle'].format(msg_components['name'], new_position), end='')
+        move_player_gooses(index, positions, new_position, steps, msg_components)
     else:
-        print(MSGS['goose_end'].format(name, new_position), end='')
+        print(MSGS['goose_end'].format(msg_components['name'], new_position), end='')
         move_player_to_position(index, positions, new_position)
         return new_position
 
-def move_players_prank(index, positions, players, old_position, new_position, msg_components, others_indexes):
+def move_players_prank(positions, players, old_position, new_position, msg_components, others_indexes):
     for i, other_index in enumerate(others_indexes):
         msg = MSGS['prank'].format(new_position, players[other_index], msg_components['old_position'], end='')
         if i == len(others_indexes) - 1:
