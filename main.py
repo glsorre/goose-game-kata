@@ -33,8 +33,12 @@ class BillBoard():
         
         old_position = player.position
         new_position = old_position + n1 + n2
-        
-        print(f"{name} rolls {n1}, {n2}. {name} moves from {'Start' if old_position == 0 else old_position} to {WIN_POSITION if new_position > WIN_POSITION else new_position}", end="")
+
+        if new_position == BRIDGE_HEAD:
+            new_position = BRIDGE_TAIL
+            print(f"{name} rolls {n1}, {n2}. {name} moves from {'Start' if old_position == 0 else old_position} to The Bridge. {name} jumps to {BRIDGE_TAIL}", end="")
+        else:
+            print(f"{name} rolls {n1}, {n2}. {name} moves from {'Start' if old_position == 0 else old_position} to {WIN_POSITION if new_position > WIN_POSITION else new_position}", end="")
 
         if new_position == WIN_POSITION:
             print(f". {name} Wins!!")

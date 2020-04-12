@@ -77,36 +77,53 @@ class TestMovePlayer(unittest.TestCase):
 
 class TestWinBouncePlayer(unittest.TestCase):
 
-        def test_acceptance_wins(self):
-            user_input = [
-                'add player Giorgio',
-                'move Giorgio 63, 0',
-                'exit'
-            ]
+    def test_acceptance_wins(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 63, 0',
+            'exit'
+        ]
 
-            expected_output = 'players: Giorgio\nGiorgio rolls 63, 0. Giorgio moves from Start to 63. Giorgio Wins!!'
+        expected_output = 'players: Giorgio\nGiorgio rolls 63, 0. Giorgio moves from Start to 63. Giorgio Wins!!'
 
-            with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
-                main.main()
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
 
-            output = out.getvalue().strip()
-            self.assertEqual(output, expected_output)
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
 
-        def test_acceptance_bounce(self):
-            user_input = [
-                'add player Giorgio',
-                'move Giorgio 60, 0',
-                'move Giorgio 3, 2',
-                'exit'
-            ]
+    def test_acceptance_bounce(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 60, 0',
+            'move Giorgio 3, 2',
+            'exit'
+        ]
 
-            expected_output = 'players: Giorgio\nGiorgio rolls 60, 0. Giorgio moves from Start to 60\nGiorgio rolls 3, 2. Giorgio moves from 60 to 63. Giorgio bounces! Giorgio returns to 61'
+        expected_output = 'players: Giorgio\nGiorgio rolls 60, 0. Giorgio moves from Start to 60\nGiorgio rolls 3, 2. Giorgio moves from 60 to 63. Giorgio bounces! Giorgio returns to 61'
 
-            with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
-                main.main()
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
 
-            output = out.getvalue().strip()
-            self.assertEqual(output, expected_output)
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+
+class TestBridgePlayer(unittest.TestCase):
+
+    def test_acceptance(self):
+        user_input = [
+            'add player Giorgio',
+            'move Giorgio 6, 0',
+            'exit'
+        ]
+
+        expected_output = 'players: Giorgio\nGiorgio rolls 6, 0. Giorgio moves from Start to The Bridge. Giorgio jumps to 12'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
  
 if __name__ == '__main__':
     unittest.main()
