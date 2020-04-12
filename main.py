@@ -1,4 +1,10 @@
-import re 
+import random
+import re
+
+WIN_POSITION = 63
+BRIDGE_HEAD = 6
+BRIDGE_TAIL = 12
+DICE_FACE = 6
 
 class Player():
     def __init__(self, name):
@@ -24,9 +30,24 @@ class BillBoard():
 
     def move_player(self, name, n1, n2):
         player = self.get_player(name)
+        
         old_position = player.position
-        player.position = old_position + n1 + n2
-        print(f"{name} rolls {n1}, {n2}. {name} moves from {'Start' if old_position == 0 else old_position} to {player.position}")
+        new_position = old_position + n1 + n2
+        
+        print(f"{name} rolls {n1}, {n2}. {name} moves from {'Start' if old_position == 0 else old_position} to {WIN_POSITION if new_position > WIN_POSITION else new_position}", end="")
+
+        if new_position == WIN_POSITION:
+            print(f". {name} Wins!!")
+        
+        elif new_position > WIN_POSITION:
+            new_position = WIN_POSITION - (new_position - WIN_POSITION)
+            print(f". {name} bounces! {name} returns to {new_position}")
+
+        else:
+            print("")
+
+        player.position = new_position
+
         return player.position
             
     def get_players_name(self):
@@ -45,8 +66,12 @@ def main():
 
         elif cmd.startswith("move"):
             p = re.compile('^move (\w*) (\d+), (\d+)$')
+            match = p.match(cmd)
             result = p.search(cmd)
-            billboard.move_player(result.group(1), int(result.group(2)), int(result.group(3)))
+            if match:
+                billboard.move_player(result.group(1), int(result.group(2)), int(result.group(3)))
+            else:
+                billboard.move_player(cmd.split()[1], random.randint(1, DICE_FACE), random.randint(1, DICE_FACE))
 
 if __name__ == '__main__':
     main()
