@@ -59,7 +59,9 @@ class BillBoard():
             print(f"{name} moves again and goes to {new_position}, The Goose. ", end="")
             self.move_player_goose(name, n1, n2)
         else:
-            print(f"{name} moves again and goes to {new_position}")
+            print(f"{name} moves again and goes to {new_position}", end="")
+
+        return new_position
 
     def move_player(self, name, n1, n2):
         player = self.get_player(name)
@@ -73,12 +75,12 @@ class BillBoard():
         print(f"{name} rolls {n1}, {n2}. {name} moves from {old_label} to {new_label}", end="")
 
         if new_position in GOOSES:
-            self.move_player_goose(name, n1, n2)
+            new_position = self.move_player_goose(name, n1, n2)
 
         elif new_position == BRIDGE_HEAD:
             new_position = BRIDGE_TAIL
             print(f" {name} jumps to {BRIDGE_TAIL}", end="")
-
+            
         elif new_position == WIN_POSITION:
             print(f". {name} Wins!!")
         
@@ -86,11 +88,21 @@ class BillBoard():
             new_position = WIN_POSITION - (new_position - WIN_POSITION)
             print(f". {name} bounces! {name} returns to {new_position}")
 
-        print("")
         player.position = new_position
+
+        players_at_position = self.get_players_at_position(new_position, name)
+        for p in players_at_position:
+            new_label = get_new_label(player.position)
+            p.position = old_position
+            print(f". On {str(new_label).split(',')[0]} there is {p.name}, who returns to {old_label}", end="")
+
+        print("")
             
     def get_players_name(self):
         return [player.name for player in self.players]
+
+    def get_players_at_position(self, position, name):
+        return list(filter(lambda player: player.position == position and player.name != name , self.players))
 
 def main():
     billboard = BillBoard()

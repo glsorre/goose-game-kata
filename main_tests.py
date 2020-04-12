@@ -157,6 +157,43 @@ class TestGoosePlayer(unittest.TestCase):
 
         output = out.getvalue().strip()
         self.assertEqual(output, expected_output)
+
+class TestPrankPlayer(unittest.TestCase):
+    def test_the_prank(self):
+        user_input = [
+            'add player Giorgio',
+            'add player Franco',
+            'move Giorgio 0, 10',
+            'move Franco 2, 8',
+            'exit'
+        ]
+
+        expected_output = 'players: Giorgio\nplayers: Giorgio, Franco\nGiorgio rolls 0, 10. Giorgio moves from Start to 10\nFranco rolls 2, 8. Franco moves from Start to 10. On 10 there is Giorgio, who returns to Start'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
+
+    def test_the_prank_double(self):
+        user_input = [
+            'add player Giorgio',
+            'add player Franco',
+            'add player Luca',
+            'move Giorgio 3, 2',
+            'move Franco 3, 2',
+            'move Luca 10, 0',
+            'exit'
+        ]
+
+        expected_output = 'players: Giorgio\nplayers: Giorgio, Franco\nplayers: Giorgio, Franco, Luca\nGiorgio rolls 3, 2. Giorgio moves from Start to 5, The Goose. Giorgio moves again and goes to 10\nFranco rolls 3, 2. Franco moves from Start to 5, The Goose. Franco moves again and goes to 10. On 10 there is Giorgio, who returns to Start\nLuca rolls 10, 0. Luca moves from Start to 10. On 10 there is Franco, who returns to Start'
+
+        with patch('builtins.input', side_effect=user_input), patch('sys.stdout', new_callable=StringIO) as out:
+            main.main()
+
+        output = out.getvalue().strip()
+        self.assertEqual(output, expected_output)
  
 if __name__ == '__main__':
     unittest.main()
