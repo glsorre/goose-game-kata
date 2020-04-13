@@ -1,197 +1,128 @@
 import random
 import re
 
-CUBE_FACES = 6
 WIN_POSITION = 63
-BRIDGE_START = 6
-BRIDGE_ARRIVE = 12
+BRIDGE_HEAD = 6
+BRIDGE_TAIL = 12
+DICE_FACE = 6
 GOOSES = [5, 9, 14, 18, 23, 27]
 
-def print_players(players):
-    print('players:', ', '.join(players))
-
-def add_player(players, positions, result):
-    if result.group(1) in players:
-        print(result.group(1), ': already existing player')
+def get_old_label(old_position):
+    if old_position == 0:
+        old_label = "Start"
     else:
-        players.append(result.group(1))
-        positions.append(0)
-        print_players(players)
+        old_label = old_position
+    return old_label
 
-def get_others_indexes(positions, index, new_position):
-    result = []
-    for i, position in enumerate(positions):
-        if position == new_position and i != index:
-            result.append(i)
-    return result
-
-def move_player_basic(name, index, positions, players, steps):
-    old_position = positions[index]
-    new_position = old_position + steps
-    move_player_to_position(index, positions, new_position)
-    return old_position, new_position
-
-def build_msg_components(name, cube_one, cube_two, old_position, new_position):
-    msg_components = {
-      'name': name,
-      'cube_one': cube_one,
-      'cube_two': cube_two,
-      'old_position': 'Start' if old_position == 0 else old_position,
-      'new_position': new_position,
-      'bridge_arrive': BRIDGE_ARRIVE,
-      'win_position': WIN_POSITION
-    }
-    
-    if new_position > WIN_POSITION:
-        msg_components['new_position'] = WIN_POSITION
-    elif new_position == BRIDGE_START:
-        msg_components['new_position'] = 'The Bridge'
-    
-    return msg_components
-
-def get_player_id(name, players):
-    try: index = players.index(name)
-    except ValueError: print('The player', name, 'does not exist.')
-    return index
-
-def match_ended(not_won, msg_components):
-    print(MSGS['win'].format(**msg_components))
-    not_won[0] = False
-
-def roll_dice(cube_faces):
-    return random.randint(1, cube_faces)
-
-def build_movements(result, rolling):
-    cube_one = roll_dice(CUBE_FACES) if rolling else result.group(2)
-    cube_two = roll_dice(CUBE_FACES) if rolling else result.group(3)
-    steps = int(cube_one) + int(cube_two)
-    return cube_one, cube_two, steps
-
-def move_player(players, positions, not_won, with_rolling, result):
-    name = result.group(1)
-    index = get_player_id(name, players)
-    if index is not None:
-        cube_one, cube_two, steps = build_movements(result, with_rolling)
-        old_position, new_position = move_player_basic(name, index, positions, players, steps)
-        msg_components = build_msg_components(name, cube_one, cube_two, old_position, new_position)
-
-        print(MSGS['rolls'].format(**msg_components), end='')
-        print(MSGS['move'].format(**msg_components), end='')
-
-        if new_position == WIN_POSITION:
-            match_ended(not_won, msg_components)
-        elif new_position > WIN_POSITION:
-            new_position = bounce_player(index, positions, msg_components)
-        elif new_position == BRIDGE_START:
-            new_position = move_player_bridge(index, positions, BRIDGE_ARRIVE, msg_components)
-        elif new_position in GOOSES:
-            print(MSGS['goose_start'].format(**msg_components), end='')
-            new_position = move_player_gooses(index, positions, new_position, steps, msg_components)
-
-        others_indexes = get_others_indexes(positions, index, new_position)
-
-        if others_indexes:
-            move_players_prank(positions, players, old_position, new_position, msg_components, others_indexes)
-
-        print('')
-
-def move_player_to_position(index, positions, position):
-    positions[index] = position
-
-def move_player_bridge(index, positions, position, msg_components):
-    print(MSGS['bridge'].format(**msg_components), end='')
-    move_player_to_position(index, positions, position)
-    return position
-
-def bounce_player(index, positions, msg_components):
-    print(MSGS['bounce_start'].format(**msg_components), end='')
-    bounce = positions[index] - WIN_POSITION
-    new_position = WIN_POSITION - bounce
-    move_player_to_position(index, positions, new_position)
-    print(MSGS['bounce_end'].format(msg_components['name'], new_position), end='')
-    return new_position
-
-def move_player_gooses(index, positions, old_position, steps, msg_components):
-    new_position = old_position + steps
+def get_new_label(new_position):
     if new_position in GOOSES:
-        print(MSGS['goose_middle'].format(msg_components['name'], new_position), end='')
-        move_player_gooses(index, positions, new_position, steps, msg_components)
+        new_label = f"{new_position}, The Goose. "
+    elif new_position == 6:
+        new_label = "The Bridge."
+    elif new_position > 63:
+        new_label = 63
     else:
-        print(MSGS['goose_end'].format(msg_components['name'], new_position), end='')
-        move_player_to_position(index, positions, new_position)
+        new_label = new_position
+    return new_label
+
+class Player():
+    def __init__(self, name):
+        self.name = name
+        self.position = 0
+
+class BillBoard():
+    def __init__(self):
+        self.players = []
+
+    def __contains__(self, player):
+        return player.name in self.get_players_name()
+
+    def add_player(self, player):
+        if player in self:
+            print(player.name, ": already existing player")
+        else:
+            self.players.append(player)
+            print("players:", ", ".join(self.get_players_name()))
+
+    def get_player(self, name):
+        return next(filter(lambda player: player.name == name, self.players))
+
+    def move_player_goose(self, name, n1, n2):
+        player = self.get_player(name)
+
+        player.position += (n1 + n2)
+
+        old_position = player.position
+        new_position = old_position + n1 + n2
+
+        if new_position in GOOSES:
+            print(f"{name} moves again and goes to {new_position}, The Goose. ", end="")
+            self.move_player_goose(name, n1, n2)
+        else:
+            print(f"{name} moves again and goes to {new_position}", end="")
+
         return new_position
 
-def move_players_prank(positions, players, old_position, new_position, msg_components, others_indexes):
-    for i, other_index in enumerate(others_indexes):
-        msg = MSGS['prank'].format(new_position, players[other_index], msg_components['old_position'], end='')
-        if i == len(others_indexes) - 1:
-            print(msg, end='')
-        else:
-            print(msg, end='')
-        move_player_to_position(other_index, positions, old_position) 
-    
-REGEXES = [
-    r'^add player (.*)$',
-    r'^move (\w*)$',
-    r'^move (\w*) (\d+), (\d+)$'
-]
+    def move_player(self, name, n1, n2):
+        player = self.get_player(name)
+        
+        old_position = player.position
+        new_position = old_position + n1 + n2
 
-FUNCTIONS = [
-    add_player,
-    move_player,
-    move_player
-]
+        old_label = get_old_label(old_position)
+        new_label = get_new_label(new_position)
 
-MSGS = {
-    'rolls':        '{name} rolls {cube_one}, {cube_two}. ',
-    'win':          '. {name} Wins!!',
-    'bounce_start': '. {name} bounces! ',
-    'bounce_end':   '{} returns to {}',
-    'bridge':       '. {name} jumps to {bridge_arrive}',
-    'goose_start':  ', The Goose. ',
-    'goose_middle': '{} moves again and goes to {}, The Goose. ',
-    'goose_end':    '{} moves again and goes to {}',
-    'move':         '{name} moves from {old_position} to {new_position}',
-    'prank':        '. On {} there is {}, who returns to {}'
-}
+        print(f"{name} rolls {n1}, {n2}. {name} moves from {old_label} to {new_label}", end="")
 
-def initialize(initialization):
-    players = []
-    positions = []
+        if new_position in GOOSES:
+            new_position = self.move_player_goose(name, n1, n2)
 
-    if initialization is not None:
-        players = initialization
-        positions = [0 for x in initialization]
+        elif new_position == BRIDGE_HEAD:
+            new_position = BRIDGE_TAIL
+            print(f" {name} jumps to {BRIDGE_TAIL}", end="")
+            
+        elif new_position == WIN_POSITION:
+            print(f". {name} Wins!!")
+        
+        elif new_position > WIN_POSITION:
+            new_position = WIN_POSITION - (new_position - WIN_POSITION)
+            print(f". {name} bounces! {name} returns to {new_position}")
 
-    return players, positions
+        player.position = new_position
 
-def main(commands_number=-1, initialization=None):
-    escaper = True
-    not_won = [True]
-    players, positions = initialize(initialization)
+        players_at_position = self.get_players_at_position(new_position, name)
+        for p in players_at_position:
+            new_label = get_new_label(player.position)
+            p.position = old_position
+            print(f". On {str(new_label).split(',')[0]} there is {p.name}, who returns to {old_label}", end="")
 
-    function_args = [
-      [players, positions],
-      [players, positions, not_won, True],
-      [players, positions, not_won, False]
-    ]
+        print("")
+            
+    def get_players_name(self):
+        return [player.name for player in self.players]
 
-    while not_won[0] and escaper:
-        if commands_number == 0: escaper = False
+    def get_players_at_position(self, position, name):
+        return list(filter(lambda player: player.position == position and player.name != name , self.players))
 
+def main():
+    billboard = BillBoard()
+    while True:
         cmd = input('Insert your command: ')
+        if cmd == 'exit':
+            break
 
-        for i, regex in enumerate(REGEXES):
-            result = re.match(regex, cmd)
-            if result:
-                FUNCTIONS[i](*function_args[i], result)
-                break
+        elif cmd.startswith("add player"):
+            player = Player(cmd.split()[2])
+            billboard.add_player(player)
 
-            if i == len(REGEXES) - 1: print('Invalid command!')
-
-        if commands_number != -1: commands_number -= 1
-
-    return players, positions
+        elif cmd.startswith("move"):
+            p = re.compile('^move (\w*) (\d+), (\d+)$')
+            match = p.match(cmd)
+            result = p.search(cmd)
+            if match:
+                billboard.move_player(result.group(1), int(result.group(2)), int(result.group(3)))
+            else:
+                billboard.move_player(cmd.split()[1], random.randint(1, DICE_FACE), random.randint(1, DICE_FACE))
 
 if __name__ == '__main__':
     main()
